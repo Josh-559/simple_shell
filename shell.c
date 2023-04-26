@@ -1,51 +1,23 @@
-#include "main.h"
+#include "shell.h"
 
 /**
- * main - Simple Shell Command Prompt
+ * main - entry point function for this program
  *
- * Return: Always 0.
+ * @argc :count of command & arguments passed
+ * @argv:holds an array of arguments
+ * @env: holds an array of environment variables
+ *
+ * Return: 0 on success
  */
-int main(void)
+
+int main(int argc, char **argv, char **env)
 {
-        char *command;
-        char buffer[BUFFER_SIZE];
-        char *args[] = {buffer, NULL};
-        pid_t child_pid;
-        int status;
+	char *buffer = NULL;
+	size_t buf_len = 0;
+	char *cmd[20];
 
-        while (1)
-        {
-                printf("#cisfun$ ");
-                fflush(stdout);
+	(void)argc;
+	REPL(buffer, buf_len, cmd, argv, env);
 
-                if (fgets(buffer, BUFFER_SIZE, stdin) == NULL)
-                        break;
-
-                buffer[strcspn(buffer, "\n")] = '\0';
-
-                child_pid = fork();
-
-                if (child_pid == -1)
-                {
-                        fprintf(stderr, "%s: ", command);
-                        perror("");
-                        exit(1);
-                }
-
-                if (child_pid == 0)
-                {
-                        if (execve(args[0], args, NULL) == -1)
-                        {
-                                fprintf(stderr, "%s: ", command);
-                                perror("");
-                                exit(1);
-                        }
-                }
-                else
-                {
-                        waitpid(child_pid, &status, 0);
-                }
-        }
-
-        return (0);
+	return (0);
 }
