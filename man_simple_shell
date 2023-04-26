@@ -1,0 +1,50 @@
+.TH hsh 1 "April 15, 2023" "1.0" "simple_shell Manual"
+
+.SH NAME
+hsh \- Simple command-line interpreter UNIX.
+
+.SH SYNOPSIS
+.B ./hsh
+.I No options available.
+
+.SH DESCRIPTION
+.B hsh
+A Unix shell is a command-line interpreter or shell that provides a command line user interface for Unix-like operating systems.
+This shell was inspired by the first UNIX shell created by Ken Thompson.
+hsh was developed in Ubuntu 16.04 LTS, compiled with GCC 4.8.4.
+
+.SH Invocation:
+Invocate the shell in interactive mode by executing the command:
+.br
+.\&
+.RS
+\&$ ./hsh.
+
+A prompt
+will appear and the user may begin entering commands and executing them by
+pressing "Enter".
+
+Alternatively, a command can be entered and then piped into ./hsh. For example:
+.br
+.\&
+\&$ echo "hello world" | ./hsh
+
+.SH BUILTINS
+The following builtin commands are supported:
+.br
+.br
+.B env
+- prints the environment
+.br
+.\&
+.B exit
+- exits the program
+
+.SH BUGS
+No known bugs.contact the authors if any
+
+.SH AUTHORS
+.br
+.IROKA JULIET
+.br
+.AYOBAMI OYETOLA
