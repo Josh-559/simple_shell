@@ -1,6 +1,12 @@
 #include "main.h"
 
 char *prog_name;
+int status_code;
+
+void shell_prompt(void);
+void run_cmd(char *line_buffer);
+int run_sys_cmd(char **argv, int n);
+void sig_handler(int sig);
 
 /**
  * main - entry point
@@ -10,11 +16,14 @@ char *prog_name;
  *
  * Return: 0 on success
  */
-
 int main(int argc, char **argv)
 {
 	size_t line_size = 0;
 	char *line_buffer = NULL;
+
+	signal(SIGINT, sig_handler);
+	if (setup_env())
+		return (-1);
 
 	prog_name = argv[0];
 
@@ -23,16 +32,38 @@ int main(int argc, char **argv)
 
 	while (1)
 	{
-		print_str("$ ");
-		if (getline(&line_buffer, &line_size, stdin) != -1)
+		if (isatty(STDIN_FILENO))
+			shell_prompt();
+		if (_getline(&line_buffer, &line_size, STDIN_FILENO) != -1)
 			run_cmd(line_buffer);
 		else
 			break;
 	}
 
+	free_env();
 	free(line_buffer);
-	print_str("\n");
-	return (0);
+
+	if (isatty(STDIN_FILENO))
+		print_str("\n");
+	return (status_code);
+}
+
+/**
+ * shell_prompt - displays shell prompt to stdout
+ */
+void shell_prompt(void)
+{
+	char cwd[PATH_MAX], *formatted_str;
+
+	if (getcwd(cwd, sizeof(cwd)) == NULL)
+		perror("getcwd() error");
+
+	formatted_str = format_tilde(cwd);
+	if (formatted_str != NULL)
+		_strcpy(cwd, formatted_str);
+	print_str(cwd);
+	free(formatted_str);
+	print_str("$ ");
 }
 
 /**
@@ -43,20 +74,48 @@ int main(int argc, char **argv)
  */
 void run_cmd(char *line_buffer)
 {
-	int n, j;
-	char *argv[MAX_ARGS_COUNT + 1];
+	int n, j, cmd_status;
+	char *argv[MAX_ARGS_COUNT + 1], *cmd, *rest, sep;
 
-	n = parse_cmd(line_buffer, argv);
+	rest = line_buffer;
 
-	if (_strcmp(argv[0], "exit") == 0)
-		exit_shell(line_buffer, argv);
-	else if (_strcmp(argv[0], "env") == 0)
-		_env();
-	else if (n != 0)
-		run_sys_cmd(argv, n);
+	while (rest != NULL)
+	{
+		split_cmds(rest, &sep, &cmd, &rest);
+		cmd_status = 0;
 
-	for (j = 0; j < n; j++)
-		free(argv[j]);
+		n = parse_cmd(cmd, argv);
+		if (n == 0)
+			break;
+		handle_variables(argv);
+		handle_aliases(argv);
+
+		if (_strcmp(argv[0], "exit") == 0)
+			exit_shell(line_buffer, argv);
+		else if (_strcmp(argv[0], "env") == 0)
+			_env();
+		else if (_strcmp(argv[0], "setenv") == 0)
+			cmd_status = (_setenv(argv[1], argv[2]) ? 2 : 0);
+		else if (_strcmp(argv[0], "unsetenv") == 0)
+			cmd_status = (_unsetenv(argv[1]) ? 2 : 0);
+		else if (_strcmp(argv[0], "cd") == 0)
+			cmd_status = change_dir(argv[1]);
+		else if (_strcmp(argv[0], "alias") == 0)
+			cmd_status = alias(argv);
+		else
+			cmd_status = run_sys_cmd(argv, n);
+
+		for (j = 0; j < n; j++)
+			free(argv[j]);
+
+		status_code = cmd_status;
+		if (sep == '|' && cmd_status == 0)
+			break;
+		else if (sep == '&' && cmd_status != 0)
+			break;
+		else if (sep == '#')
+			break;
+	}
 }
 
 
@@ -66,16 +125,20 @@ void run_cmd(char *line_buffer)
  * @argv: array of strings storing the command and it's arguments
  * @n: number of arguments in argv
  *
- * Return: void.
+ * Return: exit status code of child process
  */
-void run_sys_cmd(char **argv, int n)
+int run_sys_cmd(char **argv, int n)
 {
-	char *argv_0;
-	int child_pid, child_status, j;
+	char *prog_path;
+	int child_pid, child_status = -1, j;
+	struct stat st;
 
-	argv_0 = argv[0];
-	argv[0] = parse_path(argv[0]);
-	free(argv_0);
+	prog_path = parse_path(argv[0]);
+	if (stat(prog_path, &st) != 0)
+	{
+		perror(prog_name);
+		return (127);
+	}
 
 	child_pid = fork();
 	if (child_pid == -1)
@@ -83,15 +146,31 @@ void run_sys_cmd(char **argv, int n)
 
 	if (child_pid == 0)
 	{
-		if (execve(argv[0], argv, environ) == -1)
+		if (execve(prog_path, argv, environ) == -1)
 		{
 			perror(prog_name);
 			for (j = 0; j < n; j++)
 				free(argv[j]);
+			free(prog_path);
 
 			_exit(1);
 		}
 	}
 	else if (child_pid > 0)
 		wait(&child_status);
+
+	free(prog_path);
+	return (child_status / 256);
+}
+
+/**
+ * sig_handler - handle SIGINT signal
+ *
+ * @sig: signal value
+ */
+void sig_handler(int sig)
+{
+	print_str("\n");
+	shell_prompt();
+	(void) sig;
 }
