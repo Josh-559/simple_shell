@@ -1,26 +1,51 @@
 #include "shell.h"
 
 /**
- *read_input - function to read user input on the command line
- *@user_input: Command entered by the user
+ * main - Simple Shell Command Prompt
  *
- * Return: Nothing.
+ * Return: Always 0.
  */
-
-void read_input(char *user_input)
+int main(void)
 {
-	ssize_t bytes_read;
+        char *command;
+        char buffer[BUFFER_SIZE];
+        char *args[] = {buffer, NULL};
+        pid_t child_pid;
+        int status;
 
-	write(STDOUT_FILENO, "$ ", 3);
+        while (1)
+        {
+                printf("#cisfun$ ");
+                fflush(stdout);
 
-	bytes_read = read(STDIN_FILENO, user_input, MAX_USER_INPUT_LENGTH);
+                if (fgets(buffer, BUFFER_SIZE, stdin) == NULL)
+                        break;
 
-	if (bytes_read == -1)
-	{
-		perror("read");
-		exit(EXIT_FAILURE);
-	}
+                buffer[strcspn(buffer, "\n")] = '\0';
 
-/* Replace newline character with null terminator */
-	user_input[bytes_read - 1] = '\0';
+                child_pid = fork();
+
+                if (child_pid == -1)
+                {
+                        fprintf(stderr, "%s: ", command);
+                        perror("");
+                        exit(1);
+                }
+
+                if (child_pid == 0)
+                {
+                        if (execve(args[0], args, NULL) == -1)
+                        {
+                                fprintf(stderr, "%s: ", command);
+                                perror("");
+                                exit(1);
+                        }
+                }
+                else
+                {
+                        waitpid(child_pid, &status, 0);
+                }
+        }
+
+        return (0);
 }
