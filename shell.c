@@ -1,4 +1,4 @@
-#include "main.h"
+#include "shell.h"
 
 char *prog_name;
 int status_code;
