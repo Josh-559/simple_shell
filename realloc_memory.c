@@ -35,26 +35,26 @@ void ffree(char **dp)
  * realloc_memory - reallocates a block of memory
  * @ptr: pointer to previous malloc'ated block
  * @prev_size: byte size of previous block
- * @updated_size: byte size of new block
+ * @upd_size: byte size of new block
  *
  * Return: pointer to da ol'block nameen.
  */
-void *realloc_memory(void *ptr, unsigned int prev_size, unsigned int updated_size)
+void *realloc_memory(void *ptr, unsigned int prev_size, unsigned int upd_size)
 {
 	char *p;
 
 	if (!ptr)
-		return (malloc(updated_size));
-	if (!updated_size)
+		return (malloc(upd_size));
+	if (!upd_size)
 		return (free(ptr), NULL);
-	if (updated_size == prev_size)
+	if (upd_size == prev_size)
 		return (ptr);
 
-	p = malloc(updated_size);
+	p = malloc(upd_size);
 	if (!p)
 		return (NULL);
 
-	prev_size = prev_size < updated_size ? prev_size : updated_size;
+	prev_size = prev_size < upd_size ? prev_size : upd_size;
 	while (prev_size--)
 		p[prev_size] = ((char *)ptr)[prev_size];
 	free(ptr);

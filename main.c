@@ -2,8 +2,8 @@
 
 /**
  * main - entry point
- * @ac: arg count
  * @argv: arg vector
+ * @argc: arg count
  *
  * Return: 0 on success, 1 on error
  */

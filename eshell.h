@@ -26,7 +26,7 @@
 #define CMD_CHAINING	3
 
 /* for convert_number() */
-#define CONVERT_INTO_LOWERCASE	1
+#define CONVERT_TO_SMALL	1
 #define CONVERT_INTO_UNSIGNED	2
 
 /* 1 if using system USE_GETLINE() */

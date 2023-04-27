@@ -1,7 +1,7 @@
 #include "eshell.h"
 
 /**
- * **USE_STRTOK - splits a string into words. Repeat delimiters are ignored
+ * strtokenizer - splits a string into words. Repeat delimiters are ignored
  * @str: the input string
  * @d: the delimeter string
  * Return: a pointer to an array of strings, or NULL on failure
@@ -49,7 +49,7 @@ char **strtokenizer(char *str, char *d)
 }
 
 /**
- * **strtokenizer - splits a string into words
+ * strtokenizer2 - splits a string into words
  * @str: the input string
  * @d: the delimeter
  * Return: a pointer to an array of strings, or NULL on failure
